@@ -17,7 +17,7 @@ except FileNotFoundError:
 
 setup(
     name="notion2sql",
-    version="0.1.0",
+    version="0.1.1",
     author="Randall",
     author_email="randall@randallanjie.com",
     description="一个将Notion数据库转换为SQL接口的工具",
