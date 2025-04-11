@@ -17,7 +17,112 @@ class NotionDatabase:
         self.database_id = database_id  # 已格式化的ID
         self.database_info = self._get_database_info()
         self.properties = self._extract_properties()
+        self._name = None
+        self._column_count = None
+        self._row_count = None
         
+    @property
+    def name(self):
+        """
+        获取数据库名称
+        
+        返回:
+            str: 数据库名称
+        """
+        if self._name is None:
+            title_array = self.database_info.get("title", [])
+            self._name = "".join(part.get("plain_text", "") for part in title_array)
+        return self._name
+    
+    @property
+    def column_count(self):
+        """
+        获取数据库列数
+        
+        返回:
+            int: 列数
+        """
+        if self._column_count is None:
+            self._column_count = len(self.properties)
+        return self._column_count
+    
+    @property
+    def row_count(self):
+        """
+        获取数据库行数
+        
+        返回:
+            int: 行数
+        """
+        if self._row_count is None:
+            results = self.query(page_size=1)
+            self._row_count = len(results)
+        return self._row_count
+    
+    def get_columns(self):
+        """
+        获取数据库的所有列信息
+        
+        返回:
+            dict: 列信息字典，格式为 {列名: 列类型}
+        """
+        columns = {}
+        for prop_name, prop_info in self.properties.items():
+            columns[prop_name] = prop_info["type"]
+        return columns
+    
+    def get_column_names(self):
+        """
+        获取数据库的所有列名
+        
+        返回:
+            list: 列名列表
+        """
+        return list(self.properties.keys())
+    
+    def get_column_types(self):
+        """
+        获取数据库的所有列类型
+        
+        返回:
+            dict: 列类型字典，格式为 {列名: 列类型}
+        """
+        return {name: info["type"] for name, info in self.properties.items()}
+    
+    def get_column_info(self, column_name):
+        """
+        获取指定列的详细信息
+        
+        参数:
+            column_name (str): 列名
+            
+        返回:
+            dict: 列信息
+        """
+        return self.properties.get(column_name)
+    
+    def get_sample_data(self, limit=5):
+        """
+        获取数据库的样本数据
+        
+        参数:
+            limit (int): 返回的行数限制
+            
+        返回:
+            list: 样本数据列表
+        """
+        return self.query(page_size=limit)
+    
+    def to_sql(self):
+        """
+        获取SQL接口对象，用于执行SQL查询
+        
+        返回:
+            NotionSQLInterface: SQL接口对象
+        """
+        from .sql_interface import NotionSQLInterface
+        return NotionSQLInterface(self)
+    
     def _get_database_info(self):
         """
         获取数据库信息
